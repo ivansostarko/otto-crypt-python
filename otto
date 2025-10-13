@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import argparse, base64
+from otto_crypt import OttoCrypt
+
+def main():
+    p = argparse.ArgumentParser(description="OTTO Crypt Python CLI (compatible with Laravel & Node)")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    enc = sub.add_parser("encrypt")
+    enc.add_argument("inp")
+    enc.add_argument("out")
+    enc.add_argument("--password")
+    enc.add_argument("--recipient")
+    enc.add_argument("--raw-key")
+
+    dec = sub.add_parser("decrypt")
+    dec.add_argument("inp")
+    dec.add_argument("out")
+    dec.add_argument("--password")
+    dec.add_argument("--sender-secret")
+    dec.add_argument("--raw-key")
+
+    args = p.parse_args()
+    o = OttoCrypt()
+
+    if args.cmd == "encrypt":
+        opts = {}
+        if args.password: opts["password"] = args.password
+        if args.recipient: opts["recipient_public"] = args.recipient
+        if args._get_kwargs(): pass
+        if args.raw_key: opts["raw_key"] = args.raw_key
+        if not opts:
+            p.error("Provide one of --password, --recipient, or --raw-key")
+        o.encrypt_file(args.inp, args.out, options=opts)
+        print(f"Encrypted -> {args.out}")
+
+    elif args.cmd == "decrypt":
+        opts = {}
+        if args.password: opts["password"] = args.password
+        if args.sender_secret: opts["sender_secret"] = args.sender_secret
+        if args.raw_key: opts["raw_key"] = args.raw_key
+        if not opts:
+            p.error("Provide one of --password, --sender-secret, or --raw-key")
+        o.decrypt_file(args.inp, args.out, options=opts)
+        print(f"Decrypted -> {args.out}")
+
+if __name__ == "__main__":
+    main()
